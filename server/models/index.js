@@ -1,5 +1,3 @@
-// import Budget from "./Budget";
-// import Transaction from "./Transaction";
-import User from "./User";
+const User = require("./User");
 
-export default User;
+module.exports = User;

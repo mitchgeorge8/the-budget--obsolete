@@ -1,10 +1,8 @@
-import { connect, connection } from "mongoose";
+const { connect, connection } = require("mongoose");
 
 connect(process.env.MONGODB_URI || "mongodb://localhost/the-budget", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true,
-  useFindAndModify: false,
-});
+}).then((m) => m.connection.getClient());
 
-export default connection;
+module.exports = connection;
