@@ -1,26 +1,29 @@
 const { AuthenticationError } = require("apollo-server-express");
 const { User } = require("../models");
+const { signToken } = require("../utils/auth");
 
 const resolvers = {
   Query: {
-    user: async (parent, args, req) => {
-      if (req.session.userId) {
-        const user = await User.findById(context.user._id);
-        return user;
+    user: async (parent, args, context) => {
+      if (!context.user) {
+        throw new AuthenticationError("Not logged in");
       }
-      throw new AuthenticationError("Not logged in");
-    },
-  },
-  Mutation: {
-    createUser: async (parent, args, req) => {
-      const user = await User.create(args);
 
-      req.session.userId = user._id;
-      req.session.loggedIn = true;
+      const user = await User.findById(context.user._id).select(
+        "-__v -password"
+      );
 
       return user;
     },
-    login: async (parent, { email, password }, req) => {
+  },
+  Mutation: {
+    createUser: async (parent, args) => {
+      const user = await User.create(args);
+      const token = signToken(user);
+
+      return { token, user };
+    },
+    login: async (parent, { email, password }) => {
       const user = await User.findOne({ email });
 
       if (!user) {
@@ -33,18 +36,8 @@ const resolvers = {
         throw new AuthenticationError("Incorrect credentials");
       }
 
-      req.session.userId = user._id;
-      req.session.loggedIn = true;
-
-      console.log(req.session);
-
-      return user;
-    },
-    logout: async (parent, args, req) => {
-      if (req.session.loggedIn) {
-        req.session.destroy();
-        console.log(req.session);
-      }
+      const token = signToken(user);
+      return { token, user };
     },
   },
 };
