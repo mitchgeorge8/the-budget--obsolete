@@ -6,6 +6,20 @@ const typeDefs = gql`
     firstName: String
     lastName: String
     email: String
+    budgets: [Budget]
+    transactions: [Transaction]
+  }
+
+  type Budget {
+    _id: ID
+    name: String
+    amount: Float
+    frequency: Int
+    timeframe: String
+  }
+
+  type Transaction {
+    _id: ID
   }
 
   type Auth {
@@ -25,6 +39,12 @@ const typeDefs = gql`
       password: String!
     ): Auth
     login(email: String!, password: String!): Auth
+    addBudget(
+      name: String!
+      amount: Float!
+      frequency: Int!
+      timeframe: String!
+    ): Budget
   }
 `;
 

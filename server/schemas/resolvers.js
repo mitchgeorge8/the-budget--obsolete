@@ -1,5 +1,5 @@
 const { AuthenticationError } = require("apollo-server-express");
-const { User } = require("../models");
+const { User, Budget } = require("../models");
 const { signToken } = require("../utils/auth");
 
 const resolvers = {
@@ -9,9 +9,9 @@ const resolvers = {
         throw new AuthenticationError("Not logged in");
       }
 
-      const user = await User.findById(context.user._id).select(
-        "-__v -password"
-      );
+      const user = await User.findById(context.user._id)
+        .select("-__v -password")
+        .populate("budgets");
 
       return user;
     },
@@ -38,6 +38,24 @@ const resolvers = {
 
       const token = signToken(user);
       return { token, user };
+    },
+    addBudget: async (parents, args, context) => {
+      if (!context.user) {
+        throw new AuthenticationError("You need to be logged in");
+      }
+
+      const budget = await Budget.create({
+        ...args,
+        user: context.user._id,
+      });
+
+      await User.findByIdAndUpdate(
+        { _id: context.user._id },
+        { $push: { budgets: budget._id } },
+        { new: true }
+      );
+
+      return budget;
     },
   },
 };
